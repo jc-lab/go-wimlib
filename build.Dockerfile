@@ -15,7 +15,7 @@ RUN mkdir -p /build && \
     cd wimlib && \
     git checkout -f cd2a5e5d2e95c36e81d09077d06ad136f7d24950
 
-COPY c/wimlib-patches/ /build/wimlib-patches/
+COPY wimlib-patches/ /build/wimlib-patches/
 
 RUN cd /build/wimlib && \
     find /build/wimlib-patches/ -type f -name "*.patch" | sort | while read name; do patch -p1 < $name; done && \
