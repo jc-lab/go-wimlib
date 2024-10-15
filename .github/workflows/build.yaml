@@ -1,0 +1,124 @@
+name: Build
+
+permissions:
+  contents: write
+
+on:
+  push: {}
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - run: |
+          mkdir -p dist dist-without-ntfs dist-with-ntfs
+
+      - name: Build For Linux ${{ matrix.platform }} without ntfs
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          file: build.Dockerfile
+          platforms: linux/${{ matrix.platform }}
+          outputs: type=local,dest=./dist-without-ntfs
+          cache-from: type=gha
+          cache-to: type=gha
+          build-args: |
+            USE_NTFS_3G=false
+
+      - run: |
+          mv dist-without-ntfs/go-wimlib-linux-static dist/go-wimlib-linux_${{ matrix.platform }}-nontfs
+
+      - name: Build For Linux ${{ matrix.platform }} with ntfs
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          file: build.Dockerfile
+          platforms: linux/${{ matrix.platform }}
+          outputs: type=local,dest=./dist-with-ntfs
+          cache-from: type=gha
+          cache-to: type=gha
+          build-args: |
+            USE_NTFS_3G=true
+
+      - run: |
+          mv dist-with-ntfs/go-wimlib-linux-static dist/go-wimlib-linux_${{ matrix.platform }}-ntfs
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-linux-${{ matrix.platform }}
+          path: |
+            dist/
+
+  build-windows:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - run: |
+          mkdir -p dist
+
+      - name: Build For Windows ${{ matrix.platform }}
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          file: build-windows.Dockerfile
+          platforms: linux/${{ matrix.platform }}
+          outputs: type=local,dest=./dist
+          cache-from: type=gha
+          cache-to: type=gha
+
+      - run: |
+          mv dist/libwim-15.dll dist/libwim-15_${{ matrix.platform }}.dll
+          mv dist/go-wimlib-windows-dynamic.exe dist/go-wimlib-windows_${{ matrix.platform }}-dynamic.exe
+          mv dist/go-wimlib-windows-static.exe dist/go-wimlib-windows_${{ matrix.platform }}-static.exe
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-windows-${{ matrix.platform }}
+          path: |
+            dist/
+
+
+  release:
+    needs:
+      - build-linux
+      - build-windows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          pattern: dist-*
+          path: dist/
+      - run: |
+          find dist/ | xargs ls -l
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            dist/dist-windows-*/go-wimlib-*
+            dist/dist-windows-*/*.dll
+            dist/dist-linux-*/go-wimlib-*

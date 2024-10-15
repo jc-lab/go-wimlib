@@ -1,0 +1,11 @@
+--- a/src/mount_image.c	2024-10-11 10:31:27.498696629 +0900
++++ b/src/mount_image.c	2024-10-11 10:31:48.561643688 +0900
+@@ -53,6 +53,8 @@
+ #include <unistd.h>
+ #include <utime.h>
+ 
++#include <linux/fs.h>
++
+ #include "wimlib/blob_table.h"
+ #include "wimlib/dentry.h"
+ #include "wimlib/encoding.h"

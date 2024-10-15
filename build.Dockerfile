@@ -15,7 +15,7 @@ RUN mkdir -p /build && \
     cd wimlib && \
     git checkout -f cd2a5e5d2e95c36e81d09077d06ad136f7d24950
 
-COPY c/wimlib-patches/ /build/wimlib-patches/
+COPY wimlib-patches/ /build/wimlib-patches/
 
 RUN cd /build/wimlib && \
     find /build/wimlib-patches/ -type f -name "*.patch" | sort | while read name; do patch -p1 < $name; done && \
@@ -33,11 +33,18 @@ RUN cd /build/wimlib && \
     make && \
     make install
 
-#RUN mkdir -p /build/src /build/dist
-#COPY . /build/src
-#
-#WORKDIR /build/src
-#RUN go build -o /build/dist/bcdedit-linux --ldflags '-linkmode external -extldflags "-static"' ./cmd/bcdedit/main.go
-#
-#FROM scratch
-#COPY --from=builder /build/dist/ /
+RUN mkdir -p /build/src /build/dist
+COPY . /build/src
+
+RUN apk add fuse3-static ntfs-3g-static
+
+WORKDIR /build/src
+ENV CGO_ENABLED=1
+RUN go build -o /build/dist/go-wimlib-linux-dynamic.exe ./cmd/go-wimlib/
+RUN CGO_LDFLAGS="-static -lfuse3" && \
+    [ "x${USE_NTFS_3G:-}" = "xtrue" ] && CGO_LDFLAGS="${CGO_LDFLAGS} -lntfs-3g" || true && \
+    export CGO_LDFLAGS && \
+    go build --ldflags '-linkmode external -extldflags "-static"' -o /build/dist/go-wimlib-linux-static ./cmd/go-wimlib/
+
+FROM scratch
+COPY --from=builder /build/dist/ /
