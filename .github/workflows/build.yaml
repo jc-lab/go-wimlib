@@ -1,0 +1,104 @@
+name: Build
+
+permissions:
+  contents: write
+
+on:
+  push: {}
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - amd64
+          - arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - run: |
+          mkdir -p dist
+
+      - name: Build For Linux ${{ matrix.platform }}
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          file: build.Dockerfile
+          platforms: linux/${{ matrix.platform }}
+          outputs: type=local,dest=./dist
+          cache-from: type=gha
+          cache-to: type=gha
+
+      - run: |
+          mv dist/go-wimlib-linux dist/go-wimlib-linux_${{ matrix.platform }}
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-linux-${{ matrix.platform }}
+          path: |
+            dist/
+
+  build-windows:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - amd64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - run: |
+          mkdir -p dist
+
+      - name: Build For Windows ${{ matrix.platform }}
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          file: build-windows.Dockerfile
+          platforms: linux/${{ matrix.platform }}
+          outputs: type=local,dest=./dist
+          cache-from: type=gha
+          cache-to: type=gha
+
+      - run: |
+          mv dist/libwim-15.dll dist/libwim-15_${{ matrix.platform }}.dll
+          mv dist/go-wimlib-windows-dynamic.exe dist/go-wimlib-windows_${{ matrix.platform }}-dynamic.exe
+          mv dist/go-wimlib-windows-static.exe dist/go-wimlib-windows_${{ matrix.platform }}-static.exe
+
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-windows-${{ matrix.platform }}
+          path: |
+            dist/
+
+  release:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          pattern: dist-*
+          path: dist/
+      - run: |
+          find dist/ | xargs ls -l
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            dist/*/go-wimlib-*
