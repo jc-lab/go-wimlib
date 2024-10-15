@@ -22,20 +22,37 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - run: |
-          mkdir -p dist
+          mkdir -p dist-without-ntfs dist-with-ntfs
 
-      - name: Build For Linux ${{ matrix.platform }}
+      - name: Build For Linux ${{ matrix.platform }} without ntfs
         uses: docker/build-push-action@v6
         with:
           push: false
           file: build.Dockerfile
           platforms: linux/${{ matrix.platform }}
-          outputs: type=local,dest=./dist
+          outputs: type=local,dest=./dist-without-ntfs
           cache-from: type=gha
           cache-to: type=gha
+          args: |
+            USE_NTFS_3G=false
 
       - run: |
-          mv dist/go-wimlib-linux dist/go-wimlib-linux_${{ matrix.platform }}
+          mv dist-without-ntfs/go-wimlib-linux-static dist/go-wimlib-linux_${{ matrix.platform }}-nontfs
+
+      - name: Build For Linux ${{ matrix.platform }} with ntfs
+        uses: docker/build-push-action@v6
+        with:
+          push: false
+          file: build.Dockerfile
+          platforms: linux/${{ matrix.platform }}
+          outputs: type=local,dest=./dist-with-ntfs
+          cache-from: type=gha
+          cache-to: type=gha
+          args: |
+            USE_NTFS_3G=true
+
+      - run: |
+          mv dist-with-ntfs/go-wimlib-linux-static dist/go-wimlib-linux_${{ matrix.platform }}-ntfs
 
       - name: Archive production artifacts
         uses: actions/upload-artifact@v3

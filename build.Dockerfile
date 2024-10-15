@@ -33,11 +33,18 @@ RUN cd /build/wimlib && \
     make && \
     make install
 
-#RUN mkdir -p /build/src /build/dist
-#COPY . /build/src
-#
-#WORKDIR /build/src
-#RUN go build -o /build/dist/bcdedit-linux --ldflags '-linkmode external -extldflags "-static"' ./cmd/bcdedit/main.go
-#
-#FROM scratch
-#COPY --from=builder /build/dist/ /
+RUN mkdir -p /build/src /build/dist
+COPY . /build/src
+
+RUN apk add fuse3-static ntfs-3g-static
+
+WORKDIR /build/src
+ENV CGO_ENABLED=1
+RUN go build -o /build/dist/go-wimlib-linux-dynamic.exe ./cmd/go-wimlib/
+RUN CGO_LDFLAGS="-static -lfuse3" && \
+    [ "x${USE_NTFS_3G:-}" = "xtrue" ] && CGO_LDFLAGS="${CGO_LDFLAGS} -lntfs-3g" || true && \
+    export CGO_LDFLAGS && \
+    go build --ldflags '-linkmode external -extldflags "-static"' -o /build/dist/go-wimlib-linux-static ./cmd/go-wimlib/
+
+FROM scratch
+COPY --from=builder /build/dist/ /
