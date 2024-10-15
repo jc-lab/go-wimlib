@@ -84,7 +84,8 @@ jobs:
 
   release:
     needs:
-      - build
+      - build-linux
+      - build-windows
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
