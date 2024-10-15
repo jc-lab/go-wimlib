@@ -32,7 +32,7 @@ jobs:
           outputs: type=local,dest=./dist-without-ntfs
           cache-from: type=gha
           cache-to: type=gha
-          args: |
+          build-args: |
             USE_NTFS_3G=false
 
       - run: |
@@ -47,7 +47,7 @@ jobs:
           outputs: type=local,dest=./dist-with-ntfs
           cache-from: type=gha
           cache-to: type=gha
-          args: |
+          build-args: |
             USE_NTFS_3G=true
 
       - run: |
@@ -98,6 +98,7 @@ jobs:
           path: |
             dist/
 
+
   release:
     needs:
       - build-linux
@@ -118,4 +119,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            dist/*/go-wimlib-*
+            dist/dist-windows-*/go-wimlib-*
+            dist/dist-windows-*/*.dll
+            dist/dist-linux-*/go-wimlib-*
