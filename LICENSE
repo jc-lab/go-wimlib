@@ -1,0 +1,19 @@
+go-wimlib's License Information
+
+./model :
+  Apache 2.0 License
+  A copy of this license can be found in the file LICENSE.APACHE2
+
+other :
+  When not prohibited by a third-party software license, go-wimlib (the library portion of go-wimlib)
+  may be redistributed and/or modified under the terms of the GNU Lesser General Public License; either
+  version 3 of the License, or (at your option) any later version.
+
+  A copy of this license can be found in the file LICENSE.LGPLv3. This is offered as a "dual license",
+  meaning that you can choose either this LGPLv3+ option or the above-mentioned GPLv3+ option.
+
+  The reason for the "when not prohibited by a third-party software license" condition on the LGPL option
+  for go-wimlib is that go-wimlib can optionally be linked to the third-party library "libntfs-3g", which
+  is licensed under the GPL.
+
+In either case there is NO WARRANTY, to the extent permitted by law.
