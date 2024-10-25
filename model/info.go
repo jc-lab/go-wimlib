@@ -14,7 +14,6 @@
 
 package model
 
-import "C"
 import (
 	"encoding/base64"
 	"encoding/hex"
