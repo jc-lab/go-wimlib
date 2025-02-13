@@ -54,7 +54,7 @@ jobs:
           mv dist-with-ntfs/go-wimlib-linux-static dist/go-wimlib-linux_${{ matrix.platform }}-ntfs
 
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-linux-${{ matrix.platform }}
           path: |
@@ -92,7 +92,7 @@ jobs:
           mv dist/go-wimlib-windows-static.exe dist/go-wimlib-windows_${{ matrix.platform }}-static.exe
 
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-windows-${{ matrix.platform }}
           path: |
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           pattern: dist-*
           path: dist/
