@@ -7,6 +7,7 @@ import (
 	"github.com/jc-lab/go-wimlib/binding"
 	"github.com/jc-lab/go-wimlib/command/apply"
 	"github.com/jc-lab/go-wimlib/command/common"
+	"github.com/jc-lab/go-wimlib/command/get_xml"
 	"github.com/jc-lab/go-wimlib/command/info"
 	"github.com/pkg/errors"
 	"log"
@@ -16,8 +17,9 @@ import (
 type CommandHandler func(appFlag *common.AppFlag, args []string) (interface{}, error)
 
 var commands = map[string]CommandHandler{
-	"apply": apply.Main,
-	"info":  info.Main,
+	"apply":   apply.Main,
+	"info":    info.Main,
+	"get-xml": get_xml.Main,
 }
 
 func main() {

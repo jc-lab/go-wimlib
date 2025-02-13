@@ -43,3 +43,8 @@ type WimInfoData struct {
 	Header *WimInfo `json:"header"`
 	// Available Images
 }
+
+type WimGetXmlData struct {
+	Header *WimInfo `json:"header"`
+	Xml    string   `json:"xml"`
+}
