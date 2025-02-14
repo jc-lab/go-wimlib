@@ -43,8 +43,8 @@ ENV CGO_ENABLED=1
 RUN go build -o /build/dist/go-wimlib-linux-dynamic.exe ./cmd/go-wimlib/
 RUN CGO_LDFLAGS="-static -lfuse3" && \
     [ "x${USE_NTFS_3G:-}" = "xtrue" ] && CGO_LDFLAGS="${CGO_LDFLAGS} -lntfs-3g" || true && \
-    export CGO_LDFLAGS && \
-    go build --ldflags '-linkmode external -extldflags "-static"' -o /build/dist/go-wimlib-linux-static ./cmd/go-wimlib/
+    GO_LD_FLAGS="-linkmode external -extldflags '${CGO_LDFLAGS}'" && \
+    go build --ldflags "${GO_LD_FLAGS}" -o /build/dist/go-wimlib-linux-static ./cmd/go-wimlib/
 
 FROM scratch
 COPY --from=builder /build/dist/ /
